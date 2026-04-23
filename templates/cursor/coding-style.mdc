@@ -1,0 +1,40 @@
+---
+description: Coding style — match repo formatters, imports, and naming conventions
+globs: "**/*.{ts,tsx,js,jsx,mjs,cjs,json,css,scss,md,py,go,rs}"
+alwaysApply: false
+---
+
+## Style (discover, then match)
+
+Before editing, infer rules from the repo: **Prettier** / **Biome** / **ESLint** / **EditorConfig** / **rustfmt** / **Ruff** / **gofmt** configs and nearby files. **Do not invent** a second style.
+
+### Formatting
+
+- Run or respect the project’s formatter (e.g. `npm run format`, `biome check`, `prettier --write`) when the team expects it; align quotes, semicolons, trailing commas, and line breaks with existing files in the same directory.
+- Prefer **small diffs**: avoid whole-file reformat unless asked or required by the task.
+
+### Imports & modules
+
+- **Order:** follow local convention (often: side-effect / polyfill, external packages, aliased paths, parent `..`, sibling `.`). Group with blank lines if the codebase does.
+- **Imports:** prefer **named** vs default if the file already does; avoid deep barrel imports if the project bans them.
+- **Dead imports:** remove unused imports when touching a file.
+
+### Naming & files
+
+- **Components / types:** match casing already in use (`PascalCase` for React components, `camelCase` for functions/vars, etc.).
+- **Files:** follow existing patterns (`Component.tsx`, `kebab-case` routes, `snake_case` in Python, etc.); don’t mix styles in one PR without reason.
+
+### Lint & quality gates
+
+- Fix **new** lint issues in touched files when practical; don’t silence rules with blanket disables unless the codebase already does and the reason is documented.
+- Avoid `eslint-disable` / `@ts-ignore` **without** a short comment why.
+
+### Logs & debug
+
+- No **debug prints** or `console.log` left in committed code unless the project uses a structured logger and pattern for that.
+- Prefer the project’s logging abstraction for server and client.
+
+### Docs & comments
+
+- Public APIs: add or update **JSDoc** / TSDoc / docstrings **if** the repo does so consistently.
+- User-facing copy: follow product tone; fix typos in strings you touch.

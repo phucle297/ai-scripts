@@ -22,7 +22,7 @@ Auto-read at session start. 2 purposes: project context + behavioral constraints
 
 | Tool | File |
 |------|------|
-| Cursor | `.cursor/rules/*.mdc` (local install: `ai-scripts.mdc` from ai-scripts; follows this doc) |
+| Cursor | `.cursor/rules/*.mdc` (from `templates/cursor/*.mdc` on local install; follows this doc) |
 | OpenCode, Codex CLI | AGENTS.md |
 | Claude Code | CLAUDE.md |
 | Aider | .aider.conf.yml |

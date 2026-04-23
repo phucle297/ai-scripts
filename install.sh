@@ -203,23 +203,35 @@ install_docs_claude() {
 		echo "✅ Updated CLAUDE.md → links to AGENTS.md"
 	fi
 
-	# Claude target: do not keep Cursor project rule from this installer
-	if [[ -f ".cursor/rules/ai-scripts.mdc" ]]; then
-		rm -f ".cursor/rules/ai-scripts.mdc"
-		echo "✅ Removed .cursor/rules/ai-scripts.mdc (Claude target — not used)"
-	fi
+	# Claude target: remove Cursor rules shipped by this installer (templates/cursor/*.mdc)
+	shopt -s nullglob
+	for _src in "$SCRIPT_DIR"/templates/cursor/*.mdc; do
+		[[ -f "$_src" ]] || continue
+		_name=$(basename "$_src" .mdc)
+		_r=".cursor/rules/${_name}.mdc"
+		if [[ -f "$_r" ]]; then
+			rm -f "$_r"
+			echo "✅ Removed $_r (Claude target — not used)"
+		fi
+	done
+	shopt -u nullglob
 }
 
 install_docs_cursor() {
-	if [[ -f "$SCRIPT_DIR/templates/cursor-ai-scripts.mdc" ]]; then
-		mkdir -p .cursor/rules
-		if [[ ! -f ".cursor/rules/ai-scripts.mdc" ]]; then
-			cp "$SCRIPT_DIR/templates/cursor-ai-scripts.mdc" ".cursor/rules/ai-scripts.mdc"
-			echo "✅ Copied .cursor/rules/ai-scripts.mdc"
+	mkdir -p .cursor/rules
+	shopt -s nullglob
+	for _src in "$SCRIPT_DIR"/templates/cursor/*.mdc; do
+		[[ -f "$_src" ]] || continue
+		_name=$(basename "$_src" .mdc)
+		_dest=".cursor/rules/${_name}.mdc"
+		if [[ ! -f "$_dest" ]]; then
+			cp "$_src" "$_dest"
+			echo "✅ Copied $_dest"
 		else
-			echo "ℹ️  .cursor/rules/ai-scripts.mdc already exists (skipped)"
+			echo "ℹ️  $_dest already exists (skipped)"
 		fi
-	fi
+	done
+	shopt -u nullglob
 
 	# Cursor target: never create CLAUDE.md; optional workflow file is AGENTS.md / AI-GUIDE only
 	if [[ -f "CLAUDE.md" ]]; then
@@ -299,7 +311,9 @@ install_local() {
 	[[ -f "CLAUDE.md" ]] && echo "  - CLAUDE.md"
 	[[ -f "AGENTS.md" ]] && echo "  - AGENTS.md"
 	[[ -f "AI-GUIDE.md" ]] && echo "  - AI-GUIDE.md"
-	[[ -f ".cursor/rules/ai-scripts.mdc" ]] && echo "  - .cursor/rules/ai-scripts.mdc"
+	if compgen -G '.cursor/rules/*.mdc' >/dev/null 2>&1; then
+		echo "  - .cursor/rules/*.mdc"
+	fi
 
 	if [[ -n "$TEMP_DIR" ]] && [[ -d "$TEMP_DIR" ]]; then
 		rm -rf "$TEMP_DIR"

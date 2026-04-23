@@ -1,0 +1,46 @@
+---
+description: Frontend — React/Next, a11y, performance, and UI consistency
+globs: "**/*.{tsx,jsx,vue,svelte,astro,css,scss,less}"
+alwaysApply: false
+---
+
+## Frontend defaults
+
+Apply when editing UI, styles, or client-facing components. Prefer the project’s existing stack (React, Next, Vue, etc.) and **match patterns already in the repo** (folder layout, naming, CSS approach).
+
+### Structure & reuse
+
+- Prefer **small, focused** components over giant files. Extract when duplication is real, not speculative.
+- **Reuse** existing primitives (buttons, inputs, layout) instead of one-off styled elements unless the design requires it.
+- Keep **data / API / business logic** out of presentational leaves when the codebase already separates layers.
+
+### Accessibility (non-optional for UI)
+
+- Prefer **semantic HTML** (`button`, `nav`, `main`, headings in order). Use ARIA only when HTML cannot express the role/state.
+- **Keyboard:** interactive elements must be focusable and operable without a mouse; visible **focus** styles.
+- **Forms:** associate `label` with controls; surface errors in text (not color-only); avoid disabling submit without explanation when relevant.
+- **Images / media:** meaningful `alt`; decorative images → empty alt or `aria-hidden` as appropriate.
+- **Motion:** respect `prefers-reduced-motion` when adding non-trivial animation.
+
+### React / Next (when applicable)
+
+- **Server vs client:** default to Server Components in Next App Router unless you need hooks, browser APIs, or event handlers — use `"use client"` only where needed.
+- **Hooks:** follow rules of hooks; no conditional hooks; stable dependency arrays — avoid stale closures and infinite fetch loops.
+- **Lists:** avoid **index as `key`** when order/insert/delete matters; use stable ids.
+- **Effects:** don’t use `useEffect` for derived state you can compute during render; fetch in effects only with proper cancel/abort and error handling.
+- **Performance:** don’t memoize by default; add `useMemo` / `useCallback` / `memo` when profiling or clear hot paths justify it.
+
+### Styling
+
+- Prefer **design tokens / theme** (CSS variables, Tailwind config, existing scales) over magic numbers.
+- **Responsive:** mobile-first or match project convention; touch targets large enough.
+- Avoid **inline styles** for design-system-level concerns when the project uses CSS modules, Tailwind, or a component library.
+
+### Assets & UX polish
+
+- Avoid layout shift: reserve space for images/embeds; explicit dimensions where the stack allows.
+- Loading and empty states should be **intentional** (skeleton, message, or spinner — match existing UX).
+
+### i18n & content
+
+- If the repo uses i18n, **don’t hardcode** user-visible strings in new UI without going through the project’s translation pattern.

@@ -1,0 +1,36 @@
+---
+description: Code hygiene — boundaries, errors, security basics, readability
+globs: "**/*.{ts,tsx,js,jsx,mjs,cjs,py,go,rs,java,kt}"
+alwaysApply: false
+---
+
+## Hygiene (all languages in glob)
+
+Use with project conventions. This rule complements **ai-scripts** workflow rules; it does not replace tests or review.
+
+### Safety & secrets
+
+- **Never** commit secrets, tokens, private keys, or real production credentials. Use env vars and documented placeholders.
+- Treat **all external input** (HTTP, CLI, files, query params) as untrusted at system boundaries; validate and narrow types early.
+
+### Errors & observability
+
+- At boundaries (API routes, workers, IPC), return or log **actionable** errors without leaking internal stack traces to clients in production.
+- Prefer **typed/structured** errors or result types where the codebase already does; avoid empty `catch` blocks.
+
+### Clarity & maintenance
+
+- **Names** should reflect intent and domain; avoid abbreviations that only locals understand.
+- **Functions:** short, single-purpose; extract when logic repeats or nesting hurts readability.
+- **Comments:** explain *why* non-obvious, not *what* the code already says.
+- **Dead code:** remove unused imports, variables, and commented-out blocks you are not actively restoring.
+
+### Types (TypeScript / typed stacks)
+
+- Prefer **explicit types** at public APIs and module boundaries; avoid `any` unless justified and localized.
+- Let inference work inside small scopes; don’t over-annotate obvious locals.
+
+### Performance (general)
+
+- Avoid **O(n²)** patterns on large collections without need; stream or batch when the codebase already does.
+- Don’t add **heavy dependencies** for one-liners; prefer stdlib or existing project utilities.
