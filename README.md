@@ -6,6 +6,10 @@
 
 **This version is optimized for UI work:** component boundaries, a11y, styling, and TypeScript-heavy frontends. Shell helpers (`ctx-*`, `ai-task`) work in any repo, but **Cursor rules and examples assume you ship a modern frontend**.
 
+### Why this exists
+
+I’m a frontend developer on a tight budget — I built **ai-scripts** first **for my own** day-to-day use (fewer tokens, cheaper runs, faster UI iteration). Sharing it is a bonus. Today the defaults are **intentionally frontend-heavy**; **a more general, stack-agnostic edition** is something I plan to add down the road. Until then, think of this repo as a **UI-first** toolkit, not a neutral fit for every backend stack.
+
 ---
 
 ## Problem
