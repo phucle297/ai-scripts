@@ -1,0 +1,9 @@
+#!/bin/bash
+# ctx-imports — List dependencies imported IN a file
+# Usage: ctx-imports <file.ext>
+# Example: ctx-imports component.tsx
+
+FILE=${1:-}
+[[ -z "$FILE" ]] || [[ ! -f "$FILE" ]] && echo "Usage: ctx-imports <file.ext>" && exit 1
+
+grep -E "^import.*from" "$FILE" | sed 's/.*from ['"'"'"]\([^"'"'"']*\).*/\1/' | sort -u

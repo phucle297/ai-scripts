@@ -1,0 +1,18 @@
+#!/bin/bash
+# ctx-tree — Compact project tree
+# Usage: ctx-tree [depth]
+# Example: ctx-tree 2
+
+DEPTH=${1:-3}
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+
+find "$PROJECT_ROOT" -maxdepth "$DEPTH" \
+  -not -path "*/node_modules/*" \
+  -not -path "*/.git/*" \
+  -not -path "*/dist/*" \
+  -not -path "*/build/*" \
+  -not -path "*/.next/*" \
+  -not -path "*/coverage/*" \
+  -not -name "*.lock" \
+  | sed 's|[^/]*/|  |g' \
+  | sort

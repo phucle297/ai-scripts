@@ -1,0 +1,25 @@
+#!/bin/bash
+# ai-task — All-in-one context builder for EXPLORE phase
+# Usage: ai-task <keyword> [symbol] [ext]
+# Example: ai-task feature useHook tsx
+
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+
+KEYWORD=${1:-}
+SYMBOL=${2:-}
+EXT=${3:-""}
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+echo "## Project tree (depth 3)"
+"$SCRIPT_DIR/ctx-tree" 3
+
+echo ""
+echo "## Relevant files"
+"$SCRIPT_DIR/ctx-files" "$KEYWORD" "$EXT"
+
+if [[ -n "$SYMBOL" ]]; then
+  echo ""
+  echo "## Symbol: $SYMBOL"
+  "$SCRIPT_DIR/ctx-symbol" "$SYMBOL"
+fi

@@ -1,0 +1,22 @@
+#!/bin/bash
+# ctx-symbol — Find symbol definitions/usages
+# Usage: ctx-symbol <SymbolName>
+
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+SYMBOL=${1:-}
+
+[[ -z "$SYMBOL" ]] && echo "Usage: ctx-symbol <SymbolName>" && exit 1
+
+echo "=== DEFINITIONS ==="
+grep -rn \
+  "export.*$SYMBOL\|function $SYMBOL\|const $SYMBOL\|type $SYMBOL\|class $SYMBOL\|interface $SYMBOL" \
+  --include="*.ts" --include="*.tsx" --include="*.js" \
+  --include="*.jsx" --include="*.py" --include="*.go" \
+  "$PROJECT_ROOT" | grep -v node_modules | grep -v dist | head -10
+
+echo ""
+echo "=== USAGES ==="
+grep -rn "$SYMBOL" \
+  --include="*.ts" --include="*.tsx" --include="*.js" \
+  --include="*.jsx" --include="*.py" --include="*.go" \
+  "$PROJECT_ROOT" | grep -v node_modules | grep -v dist | grep -v "^Binary" | head -20

@@ -1,0 +1,12 @@
+#!/bin/bash
+# ctx-referencers — Find files that USE a symbol (reverse search)
+# Usage: ctx-referencers <SymbolName> [ext]
+# Example: ctx-referencers useUserProfile
+
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+SYMBOL=${1:-}
+
+[[ -z "$SYMBOL" ]] && echo "Usage: ctx-referencers <SymbolName>" && exit 1
+
+grep -rln "$SYMBOL" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" "$PROJECT_ROOT" \
+  | grep -v node_modules | grep -v dist | grep -v "\.d\.ts"

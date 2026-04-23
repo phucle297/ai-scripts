@@ -1,0 +1,20 @@
+#!/bin/bash
+# ai-scripts init — Initialize project with AGENTS.md
+# Usage: ai-scripts init
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ -f "AGENTS.md" ]]; then
+  echo "⚠️  AGENTS.md already exists"
+  read -q "Update? [y/N] " yn
+  echo ""
+  [[ ! "$yn" =~ [yY] ]] && exit 0
+fi
+
+cp "$SCRIPT_DIR/templates/AGENTS.md" ./AGENTS.md
+echo "✅ AGENTS.md created"
+echo ""
+echo "Next:"
+echo "  1. Customize AGENTS.md for your project"
+echo "  2. Add AI SKILL RULES to your agent config"
+echo "  3. Set up pre-commit hook"

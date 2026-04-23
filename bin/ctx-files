@@ -1,0 +1,25 @@
+#!/bin/bash
+# ctx-files — Find relevant files by keyword/ext
+# Usage: ctx-files <keyword> [ext]
+# Example: ctx-files UserProfile tsx
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+
+KEYWORD=${1:-}
+EXT=${2:-""}
+PATTERN=${EXT:+"*.$EXT"}
+PATTERN=${PATTERN:-"*"}
+
+[[ -z "$KEYWORD" ]] && echo "Usage: ctx-files <keyword> [ext]" && exit 1
+
+find "$PROJECT_ROOT" -name "$PATTERN" \
+  -not -path "*/node_modules/*" \
+  -not -path "*/.git/*" \
+  -not -path "*/dist/*" \
+  -not -path "*/build/*" \
+  -not -path "*/.next/*" \
+  -not -path "*/coverage/*" \
+  | grep -i "$KEYWORD" \
+  | sort \
+  | head -30

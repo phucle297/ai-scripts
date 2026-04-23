@@ -1,0 +1,17 @@
+#!/bin/bash
+# ctx-declarations — Read .d.ts or exports from TS file
+# Usage: ctx-declarations <file.ts>
+# Example: ctx-declarations component.ts
+
+FILE=${1:-}
+[[ -z "$FILE" ]] && echo "Usage: ctx-declarations <file.ts>" && exit 1
+
+if [[ -f "$FILE.d.ts" ]]; then
+  cat "$FILE.d.ts"
+elif [[ -f "${FILE%.ts}.d.ts" ]]; then
+  cat "${FILE%.ts}.d.ts"
+elif [[ -f "${FILE%.tsx}.d.ts" ]]; then
+  cat "${FILE%.tsx}.d.ts"
+else
+  grep -E "^export (type|interface|class|const|function)" "$FILE" | head -30
+fi

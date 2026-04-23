@@ -1,0 +1,236 @@
+#!/bin/bash
+# init-project — Auto-detect tech stack, structure, and commands
+# Usage: init-project [--full] [--agents]
+#   --full    Show all detected info
+#   --agents  Generate project context block for AGENTS.md
+
+set -e
+
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MODE="${1:-compact}"
+
+SHOW_ALL=false
+GENERATE_AGENTS=false
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --full) SHOW_ALL=true; shift ;;
+    --agents) GENERATE_AGENTS=true; shift ;;
+    *) shift ;;
+  esac
+done
+
+echo "🔍 Scanning project..."
+echo ""
+
+detect_tech_stack() {
+  echo "## Tech Stack"
+
+  if [[ -f "$PROJECT_ROOT/package.json" ]]; then
+    NAME=$(node -p "require('./package.json').name" 2>/dev/null || echo "?")
+    DEPS=$(node -p "Object.keys(require('./package.json').dependencies || {}).join(', ')" 2>/dev/null || echo "?")
+    DEV_DEPS=$(node -p "Object.keys(require('./package.json').devDependencies || {}).join(', ')" 2>/dev/null || echo "?")
+    ENGINE=$(node -p "require('./package.json').engines?.node" 2>/dev/null || echo "any")
+
+    if [[ -f "$PROJECT_ROOT/pnpm-lock.yaml" ]]; then
+      PKG_MANAGER="pnpm"
+    elif [[ -f "$PROJECT_ROOT/yarn.lock" ]]; then
+      PKG_MANAGER="yarn"
+    elif [[ -f "$PROJECT_ROOT/bun.lockb" ]]; then
+      PKG_MANAGER="bun"
+    elif [[ -f "$PROJECT_ROOT/package-lock.json" ]]; then
+      PKG_MANAGER="npm"
+    else
+      PKG_MANAGER="npm"
+    fi
+
+    echo "  Language: Node.js ($ENGINE)"
+    echo "  Package manager: $PKG_MANAGER"
+    echo "  Package: $NAME"
+    echo "  Dependencies: ${DEPS:-none}"
+    echo "  Dev Dependencies: ${DEV_DEPS:-none}"
+  elif [[ -f "$PROJECT_ROOT/go.mod" ]]; then
+    MODULE=$(grep "^module" "$PROJECT_ROOT/go.mod" | awk '{print $2}' | head -1)
+    GO_VERSION=$(grep "^go " "$PROJECT_ROOT/go.mod" | awk '{print $2}' | head -1)
+    echo "  Language: Go ($GO_VERSION)"
+    echo "  Module: $MODULE"
+  elif [[ -f "$PROJECT_ROOT/pyproject.toml" ]]; then
+    NAME=$(python3 -c "import tomllib; d=tomllib.load(open('pyproject.toml','rb')); print(d.get('project',{}).get('name',d.get('tool',{}).get('poetry',{}).get('name','?')))" 2>/dev/null || echo "?")
+    echo "  Language: Python (pyproject.toml)"
+    echo "  Package: $NAME"
+  elif [[ -f "$PROJECT_ROOT/requirements.txt" ]]; then
+    echo "  Language: Python (requirements.txt)"
+  elif [[ -f "$PROJECT_ROOT/Cargo.toml" ]]; then
+    NAME=$(grep "^name" "$PROJECT_ROOT/Cargo.toml" | head -1 | awk '{print $3}')
+    echo "  Language: Rust (Cargo.toml)"
+    echo "  Package: $NAME"
+  elif [[ -f "$PROJECT_ROOT/pom.xml" ]]; then
+    ARTIFACT=$(grep "<artifactId>" "$PROJECT_ROOT/pom.xml" | head -1 | sed 's/.*<artifactId>//;s/<\/artifactId>//')
+    echo "  Language: Java (Maven)"
+    echo "  Package: $ARTIFACT"
+  elif [[ -f "$PROJECT_ROOT/build.gradle" ]]; then
+    echo "  Language: Java (Gradle)"
+  elif [[ -f "$PROJECT_ROOT/composer.json" ]]; then
+    echo "  Language: PHP (Composer)"
+  elif [[ -f "$PROJECT_ROOT/mix.exs" ]]; then
+    echo "  Language: Elixir (Mix)"
+  elif [[ -f "$PROJECT_ROOT/project.clj" ]]; then
+    echo "  Language: Clojure (Leiningen)"
+  elif [[ -f "$PROJECT_ROOT/*.csproj" ]]; then
+    echo "  Language: C# (.NET)"
+  else
+    echo "  Unknown"
+  fi
+}
+
+detect_framework() {
+  if [[ -f "$PROJECT_ROOT/next.config.js" ]] || [[ -f "$PROJECT_ROOT/next.config.mjs" ]]; then
+    echo "  Framework: Next.js"
+  elif [[ -f "$PROJECT_ROOT/remix.config.js" ]]; then
+    echo "  Framework: Remix"
+  elif [[ -f "$PROJECT_ROOT/svelte.config.js" ]]; then
+    echo "  Framework: SvelteKit"
+  elif [[ -f "$PROJECT_ROOT/vite.config.js" ]] || [[ -f "$PROJECT_ROOT/vite.config.ts" ]]; then
+    echo "  Framework: Vite"
+  elif [[ -f "$PROJECT_ROOT/webpack.config.js" ]]; then
+    echo "  Framework: Webpack"
+  elif [[ -f "$PROJECT_ROOT/tsconfig.json" ]]; then
+    echo "  TypeScript: enabled"
+  fi
+}
+
+detect_commands() {
+  echo ""
+  echo "## Commands"
+
+  if [[ -f "$PROJECT_ROOT/package.json" ]]; then
+    if [[ -f "$PROJECT_ROOT/pnpm-lock.yaml" ]]; then
+      PKG="pnpm"
+    elif [[ -f "$PROJECT_ROOT/yarn.lock" ]]; then
+      PKG="yarn"
+    elif [[ -f "$PROJECT_ROOT/bun.lockb" ]]; then
+      PKG="bun"
+    else
+      PKG="npm"
+    fi
+
+    SCRIPTS=$(node -p "JSON.stringify(require('./package.json').scripts || {})" 2>/dev/null | python3 -c "import sys,json; s=json.load(sys.stdin); [print(f'  $PKG run {k}: {v}') for k,v in s.items()]" 2>/dev/null || echo "  (parse failed)")
+    if [[ -n "$SCRIPTS" ]]; then
+      echo "$SCRIPTS"
+    fi
+  fi
+
+  if [[ -f "$PROJECT_ROOT/Makefile" ]]; then
+    TARGETS=$(grep -E "^[a-zA-Z0-9_-]+:" "$PROJECT_ROOT/Makefile" | sed 's/:.*//' | head -10 | sed 's/^/  /')
+    echo "$TARGETS"
+  fi
+
+  if [[ -f "$PROJECT_ROOT/fastlane/Fastfile" ]]; then
+    LANES=$(grep "lane " "$PROJECT_ROOT/fastlane/Fastfile" | sed 's/.*lane //;s/ do.*//' | sed 's/^/  /')
+    echo "$LANES"
+  fi
+
+  if [[ -f "$PROJECT_ROOT/justfile" ]]; then
+    RECIPES=$(grep -E "^[a-zA-Z0-9_-]+" "$PROJECT_ROOT/justfile" | head -10 | sed 's/^/  /')
+    echo "$RECIPES"
+  fi
+}
+
+detect_structure() {
+  echo ""
+  echo "## Project Structure"
+  "$SCRIPT_DIR/ctx-tree" 3 | head -50
+}
+
+detect_test_runner() {
+  echo ""
+  echo "## Test / Lint"
+
+  if [[ -f "$PROJECT_ROOT/package.json" ]]; then
+    if [[ -f "$PROJECT_ROOT/pnpm-lock.yaml" ]]; then
+      PKG="pnpm"
+    elif [[ -f "$PROJECT_ROOT/yarn.lock" ]]; then
+      PKG="yarn"
+    elif [[ -f "$PROJECT_ROOT/bun.lockb" ]]; then
+      PKG="bun"
+    else
+      PKG="npm"
+    fi
+
+    TEST_CMD=$(node -p "require('./package.json').scripts?.test" 2>/dev/null || echo "")
+    LINT_CMD=$(node -p "require('./package.json').scripts?.lint" 2>/dev/null || echo "")
+    TYPE_CHECK=$(node -p "require('./package.json').scripts?.typecheck" 2>/dev/null || echo "")
+    [[ -n "$TEST_CMD" ]] && echo "  Test: $PKG test ($TEST_CMD)"
+    [[ -n "$LINT_CMD" ]] && echo "  Lint: $PKG run lint ($LINT_CMD)"
+    [[ -n "$TYPE_CHECK" ]] && echo "  Type check: $PKG run typecheck ($TYPE_CHECK)"
+  fi
+
+  if [[ -f "$PROJECT_ROOT/.eslintrc" ]] || [[ -f "$PROJECT_ROOT/.eslintrc.js" ]] || [[ -f "$PROJECT_ROOT/.eslintrc.json" ]]; then
+    echo "  ESLint: configured"
+  fi
+  if [[ -f "$PROJECT_ROOT/.prettierrc" ]] || [[ -f "$PROJECT_ROOT/.prettierrc.js" ]] || [[ -f "$PROJECT_ROOT/prettier.config.js" ]]; then
+    echo "  Prettier: configured"
+  fi
+  if [[ -f "$PROJECT_ROOT/.editorconfig" ]]; then
+    echo "  EditorConfig: configured"
+  fi
+}
+
+generate_agents_block() {
+  echo ""
+  echo "## AI AGENT CONTEXT (paste into AGENTS.md)"
+  echo ""
+  echo '```'
+
+  if [[ -f "$PROJECT_ROOT/package.json" ]]; then
+    if [[ -f "$PROJECT_ROOT/pnpm-lock.yaml" ]]; then
+      PKG="pnpm"
+    elif [[ -f "$PROJECT_ROOT/yarn.lock" ]]; then
+      PKG="yarn"
+    elif [[ -f "$PROJECT_ROOT/bun.lockb" ]]; then
+      PKG="bun"
+    else
+      PKG="npm"
+    fi
+
+    SCRIPTS=$(node -p "JSON.stringify(require('./package.json').scripts || {})" 2>/dev/null)
+    if [[ -n "$SCRIPTS" ]] && [[ "$SCRIPTS" != "{}" ]]; then
+      echo "$SCRIPTS" | python3 -c "
+import sys,json
+s=json.load(sys.stdin)
+print('| Command | Script |')
+print('|---------|-------|')
+for k,v in s.items():
+    print(f'| {k} | $PKG run {k} |')
+"
+    fi
+  fi
+
+  echo ""
+  echo "### Tech Stack"
+  detect_tech_stack 2>/dev/null
+
+  echo ""
+  echo "### Test Runner"
+  detect_test_runner 2>/dev/null
+
+  echo '```'
+}
+
+detect_tech_stack
+detect_framework
+detect_commands
+detect_structure
+detect_test_runner
+
+if [[ "$GENERATE_AGENTS" == "true" ]]; then
+  generate_agents_block
+fi
+
+if [[ "$SHOW_ALL" == "true" ]]; then
+  echo ""
+  echo "## Package Dependencies"
+  if [[ -f "$PROJECT_ROOT/package.json" ]]; then
+    node -p "Object.entries(require('./package.json').dependencies || {}).map(([k,v])=>k+'@'+v).join('\n')" 2>/dev/null
+  fi
+fi

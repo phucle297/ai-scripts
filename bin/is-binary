@@ -1,0 +1,13 @@
+#!/bin/bash
+# is-binary — Detect if file is binary (skip reading)
+# Usage: is-binary <file>
+# Returns: binary | text
+
+FILE=${1:-}
+[[ -z "$FILE" ]] || [[ ! -f "$FILE" ]] && echo "Usage: is-binary <file>" && exit 1
+
+if file "$FILE" | grep -q "binary"; then
+  echo "binary"
+else
+  echo "text"
+fi

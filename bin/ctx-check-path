@@ -1,0 +1,15 @@
+#!/bin/bash
+# ctx-check-path — Check if path exists (no read)
+# Usage: ctx-check-path <path>
+# Returns: exists | dir | missing
+
+PATH=${1:-}
+[[ -z "$PATH" ]] && echo "Usage: ctx-check-path <path>" && exit 1
+
+if [[ -d "$PATH" ]]; then
+  echo "dir"
+elif [[ -f "$PATH" ]]; then
+  echo "exists"
+else
+  echo "missing"
+fi

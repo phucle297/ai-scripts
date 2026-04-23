@@ -1,0 +1,19 @@
+#!/bin/bash
+# ctx-diff — Clean diff for review (no lockfiles)
+# Usage: ctx-diff [base]
+# Example: ctx-diff HEAD~1
+
+BASE=${1:-HEAD}
+
+git diff "$BASE" \
+  --diff-filter=ACDMR \
+  --ignore-blank-lines \
+  --ignore-space-change \
+  -- ':!package-lock.json' \
+     ':!yarn.lock' \
+     ':!*.lock' \
+     ':!pnpm-lock.yaml' \
+     ':!dist/*' \
+     ':!build/*' \
+     ':!*.min.js' \
+     ':!*.min.css'

@@ -1,0 +1,9 @@
+#!/bin/bash
+# ctx-errors — Extract failures from test/lint output
+# Usage: npm test 2>&1 | ctx-errors
+
+grep -E \
+  "(FAIL|ERROR|error TS|error:|✗|×|FAILED|AssertionError|TypeError|Cannot find|Expected|SyntaxError)" \
+  | grep -v "^$" \
+  | grep -v "node_modules" \
+  | head -40

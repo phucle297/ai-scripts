@@ -1,0 +1,76 @@
+---
+description: ai-scripts — Cursor-only workflow (AGENTS phases, plan-before-implement gate, ctx-* discipline)
+alwaysApply: true
+---
+
+## Cursor + ai-scripts (project rule)
+
+This rule is the **Cursor-specific** companion to the repo’s **AGENTS.md** / **AI-GUIDE.md** workflow. Follow those files for full detail; this rule enforces **non‑negotiable gates** so the agent does not skip phases.
+
+### Source of truth (order)
+
+1. **`AI-GUIDE.md`** — if it exists, treat it as the primary workflow + skill rules.
+2. **`AGENTS.md`** — if no `AI-GUIDE.md`, use this.
+3. This rule — **only** for Cursor behavior and phase gates; if anything conflicts, the project markdown wins.
+
+---
+
+## Mandatory loop (do not skip)
+
+```
+EXPLORE → PLAN → IMPLEMENT → COMMIT → (repeat)
+```
+
+Map to **AGENTS.md** “Four Phases”:
+
+| Phase | Mode | Writes allowed? |
+|-------|------|------------------|
+| EXPLORE | plan / read-only | **No** |
+| PLAN | plan / read-only | **No** |
+| IMPLEMENT | build | **Yes**, only scoped files from approved plan |
+| COMMIT / REVIEW | review | **No** file edits; use diff / review |
+
+Align with **AI SKILL RULES**: EXPLORE/PLAN = read-only; IMPLEMENT = scoped writes; REVIEW = diff-only, no broad re-reads.
+
+---
+
+## Gate — PLAN before IMPLEMENT (remind if user “forgets”)
+
+Before **any** code edits, dependency installs, or “just fix it” implementation:
+
+**If** the user asks to implement, change, fix, refactor, or “do the task” **and** there is no **approved** plan in the thread (explicit step list or plan JSON the user accepted), **then**:
+
+1. **Stop** — do not modify files yet.
+2. **Remind** briefly that this repo’s workflow requires **PLAN before IMPLEMENT** (per AGENTS.md).
+3. Offer **exactly two** paths (user must pick or clearly imply one):
+
+   - **Path A — User-driven plan:** User provides context (e.g. runs `./scripts/ai-task "<keyword>" "<Symbol>" [ext]` and pastes output, or supplies paths). You stay in **read-only** mode, produce a **plan JSON** (or structured step list matching AGENTS templates), and **wait for explicit approval** before IMPLEMENT.
+
+   - **Path B — Agent plan with permission:** Ask the user to **explicitly allow** you to run **PLAN autonomously** (still read-only): you may read listed files / run **scoped** `ctx-*` / `ai-task` via terminal **only** to produce the plan, then **stop again** for approval before any writes.
+
+4. Only after **approved plan** + clear **IMPLEMENT** go-ahead may you change files — and **only** files in the current step’s scope.
+
+**Signals that this gate applies:** “sửa”, “fix”, “implement”, “add feature”, “refactor”, “patch”, “apply changes”, or any request that implies editing code **without** a prior approved plan in the conversation.
+
+**Exception:** If the user **explicitly** says they are **skipping plan** and accept risk (e.g. “skip plan, emergency hotfix”), warn once about scope/regression risk, then proceed — do not block indefinitely.
+
+---
+
+## Token / exploration discipline (ai-scripts)
+
+- Avoid blind exploration: no **`ls` / `find` / repo-wide `grep`** unless the user explicitly asked for that style of search.
+- Prefer **`./scripts/ai-task`**, **`ctx-files`**, **`ctx-symbol`**, **`ctx-imports`**, **`ctx-referencers`**, **`ctx-declarations`**, **`ctx-diff`**, **`ctx-errors`** (paths relative to project; use `scripts/` after local install).
+- If context is missing: say what’s missing; suggest the **smallest** script or paste (e.g. `ai-task` output) instead of scanning the whole repo.
+
+---
+
+## Output shape
+
+- **PLAN / status:** Prefer **structured JSON** when producing plans or step status (per AGENTS prompt templates). Short bullets are OK for short Cursor replies when JSON is not needed.
+- Stay concise; avoid long narratives between steps.
+
+---
+
+## Subagents / roles (when relevant)
+
+When splitting work, follow AGENTS **Subagent Architecture**: orchestrator (plan), workers (scoped implement), reviewer (diff-only, `ctx-diff`).
