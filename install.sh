@@ -202,6 +202,12 @@ install_docs_claude() {
 		append_link_once CLAUDE.md "See [AGENTS.md](./AGENTS.md) for AI agent context."
 		echo "✅ Updated CLAUDE.md → links to AGENTS.md"
 	fi
+
+	# Claude target: do not keep Cursor project rule from this installer
+	if [[ -f ".cursor/rules/ai-scripts.mdc" ]]; then
+		rm -f ".cursor/rules/ai-scripts.mdc"
+		echo "✅ Removed .cursor/rules/ai-scripts.mdc (Claude target — not used)"
+	fi
 }
 
 install_docs_cursor() {
@@ -215,11 +221,16 @@ install_docs_cursor() {
 		fi
 	fi
 
+	# Cursor target: never create CLAUDE.md; optional workflow file is AGENTS.md / AI-GUIDE only
+	if [[ -f "CLAUDE.md" ]]; then
+		echo "ℹ️  CLAUDE.md is present (not created by Cursor target). Cursor uses .cursor/rules — remove CLAUDE.md if you do not use Claude Code here." >&2
+	fi
+
 	local tpl="$SCRIPT_DIR/templates/AGENTS.md"
 	[[ -f "$tpl" ]] || return 0
-	if [[ ! -f "AGENTS.md" ]] && [[ ! -f "AI-GUIDE.md" ]] && [[ ! -f "CLAUDE.md" ]]; then
+	if [[ ! -f "AGENTS.md" ]] && [[ ! -f "AI-GUIDE.md" ]]; then
 		cp "$tpl" AGENTS.md
-		echo "✅ Created AGENTS.md (workflow doc; no existing guide found)"
+		echo "✅ Created AGENTS.md (workflow doc; no AGENTS.md or AI-GUIDE.md yet)"
 	fi
 }
 
@@ -289,8 +300,6 @@ install_local() {
 	[[ -f "AGENTS.md" ]] && echo "  - AGENTS.md"
 	[[ -f "AI-GUIDE.md" ]] && echo "  - AI-GUIDE.md"
 	[[ -f ".cursor/rules/ai-scripts.mdc" ]] && echo "  - .cursor/rules/ai-scripts.mdc"
-	echo ""
-	echo "Next: Run ./scripts/init-project --agents to detect your project context"
 
 	if [[ -n "$TEMP_DIR" ]] && [[ -d "$TEMP_DIR" ]]; then
 		rm -rf "$TEMP_DIR"
@@ -315,7 +324,3 @@ local)
 	install_local
 	;;
 esac
-
-echo ""
-echo "Available commands:"
-ls "$SCRIPT_DIR"/bin/ | sed 's/^/  /'

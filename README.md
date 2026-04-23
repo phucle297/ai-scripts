@@ -48,19 +48,13 @@ From a clone you can run `./install.sh local` (same prompt).
 
 | Choice | What gets created |
 |--------|-------------------|
-| **1 — Claude** | `CLAUDE.md` from the workflow template. If `CLAUDE.md` already exists → create `AGENTS.md` (if missing) and add a link from `CLAUDE.md` → `AGENTS.md`. |
-| **2 — Cursor** | `.cursor/rules/ai-scripts.mdc` (if missing). If there is no `AGENTS.md`, `AI-GUIDE.md`, or `CLAUDE.md` yet → also create `AGENTS.md`. |
+| **1 — Claude** | `CLAUDE.md` from the workflow template. If `CLAUDE.md` already exists → create `AGENTS.md` (if missing) and add a link from `CLAUDE.md` → `AGENTS.md`. Removes `.cursor/rules/ai-scripts.mdc` if present (Claude target does not use that rule). |
+| **2 — Cursor** | `.cursor/rules/ai-scripts.mdc` (if missing). Does **not** create `CLAUDE.md`. If there is no `AGENTS.md` or `AI-GUIDE.md` yet → create `AGENTS.md`. |
 | **3 — Other** | `AGENTS.md` if missing. If `AGENTS.md` already exists → create `AI-GUIDE.md` (if missing) and link from `AGENTS.md` → `AI-GUIDE.md`. |
 
 **Always created:** `scripts/*` — 13 commands (symlinked or copied when installing from curl).
 
-**No TTY** (e.g. CI, Docker without `-t`): there is no terminal to read from, so the installer defaults to **Other**. Override:
-
-```bash
-AI_SCRIPTS_AGENT=cursor curl -sSL https://raw.githubusercontent.com/phucle297/ai-scripts/main/install.sh | bash -s -- local
-curl -sSL https://raw.githubusercontent.com/phucle297/ai-scripts/main/install.sh | bash -s -- local cursor
-./install.sh local --claude
-```
+**Shell PATH:** Local install does **not** change your shell config. Run commands as `./scripts/ai-task`, … For `ai-task` on your PATH everywhere, use **Option 2 (global)** below.
 
 Run `install.sh --help` for flags (`--claude`, `--cursor`, `--other`, `agents`).
 
@@ -75,7 +69,7 @@ Then auto-detect your project:
 
 ### Option 2: Global (personal tool)
 
-Install once, use anywhere:
+Install once, use anywhere. This clones `~/.ai-scripts` and **appends** `~/.ai-scripts/bin` to your shell rc (`~/.zshrc`, `~/.bashrc`, …) so commands like `ai-task` work in any directory without `./scripts/`.
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/phucle297/ai-scripts/main/install.sh | bash -s -- global
